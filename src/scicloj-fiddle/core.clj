@@ -70,23 +70,20 @@
          (#(ds// (reduce ds/+ %)
                  (first (:shape (t/tensor->dimensions %)))))))
   
-  (def reviews-summary
+  (def reviews-as-gpt2-embeddings
     (->>
      (r->clj (read-csv "/home/voyager/scicloj-fiddle/resources/reviews_summary.csv"))
      (#(d/column % :comments))
-     (into [])))
-
-  (def gpt2-embeddings
-    (->> comments
-         (take 750)
-         (map clojure.string/lower-case)
-         (map (partial sentence-embedding tokenizer model-op))
-         (into [])
-         (py/->numpy)))
+     (into [])
+     (take 750)
+     (map clojure.string/lower-case)
+     (map (partial sentence-embedding tokenizer model-op))
+     (into [])
+     (py/->numpy)))
   
   (def dim-reducer (umap/UMAP))
 
-  (def embedding (py. dim-reducer fit_transform (py.- gpt2-embeddings data)))
+  (def embedding (py. dim-reducer fit_transform (py.- reviews-as-gpt2-embeddings data)))
 
   ;; (py.- embedding shape)
 
